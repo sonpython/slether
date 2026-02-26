@@ -1,8 +1,10 @@
 # Slether
 
+**Play now: [https://slether.live](https://slether.live)**
+
 A high-performance [Slither.io](http://slither.io) clone written in Go + vanilla HTML5 Canvas.
 
-Single binary server, zero dependencies, handles **5,000+ concurrent players** on **1 vCPU / 512MB RAM**.
+Single binary server, zero dependencies, handles **8,000+ concurrent players** on **2 vCPU / 2GB RAM**.
 
 ![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)
 ![License](https://img.shields.io/badge/license-MIT-green)
