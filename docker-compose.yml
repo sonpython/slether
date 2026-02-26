@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
     environment:
       - REPO_URL=${GITHUB_REPO_URL}
-      - ACCESS_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
       - RUNNER_NAME=${GITHUB_RUNNER_NAME:-slether-runner}
       - RUNNER_WORKDIR=/tmp/runner/work
       - LABELS=self-hosted,linux,x64
