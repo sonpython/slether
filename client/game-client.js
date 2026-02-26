@@ -88,8 +88,8 @@ export class GameClient {
 
     this._ws.addEventListener('close', () => {
       this._wsReady = false;
-      this.ui.setConnectionStatus(false);
       if (!this._intentionallyClosed) {
+        this.ui.setConnectionStatus(false);
         this._scheduleReconnect();
       }
     });
