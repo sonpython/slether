@@ -10,9 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Rebuild and restart slether container
-        working-directory: /opt/slether
+      - name: Rebuild and restart slether
         run: |
+          cd /opt/slether
           git pull origin main
           docker compose --env-file .env.production build slether
           docker compose --env-file .env.production up -d slether
