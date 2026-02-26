@@ -68,7 +68,7 @@ const (
 	// Viewport
 	ViewportWidth  = 1536.0 // 1920 * 0.8
 	ViewportHeight = 864.0  // 1080 * 0.8
-	ViewportBuffer = 200.0
+	ViewportBuffer = 800.0 // covers up to 4K screens (3840*0.8=3072, need (3072-1536)/2=768 extra)
 
 	// Spatial grid — covers bounding square of circular world (0..2*WorldRadius)
 	GridCellSize = 200.0

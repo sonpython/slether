@@ -140,8 +140,8 @@ func (s *Snake) ApplyInput(angle float64, boost bool) *Food {
 			if s.Width < SnakeBaseWidth {
 				s.Width = SnakeBaseWidth
 			}
-			// Only drop food 80% of the time (20% pure cost)
-			if rand.Float64() < 0.8 {
+			// Only drop food 50% of the time (50% pure cost)
+			if rand.Float64() < 0.5 {
 				f := newFoodWithLevel(tail.X, tail.Y, FoodLevel3, false)
 				f.Color = s.Color
 				return f
@@ -156,12 +156,17 @@ func (s *Snake) ApplyInput(angle float64, boost bool) *Food {
 }
 
 // DropFood converts the snake body into food items and marks it dead.
-// Returns the generated food slice (level-5 food).
+// Only drops 70% of body segments as food to act as a score sink.
 func (s *Snake) DropFood() []*Food {
 	s.Alive = false
-	food := make([]*Food, 0, len(s.Segments)/DeathFoodPerUnit+1)
+	totalDrops := len(s.Segments) / DeathFoodPerUnit
+	dropCount := int(float64(totalDrops) * 0.7)
+	food := make([]*Food, 0, dropCount+1)
 	for i, seg := range s.Segments {
 		if i%DeathFoodPerUnit == 0 {
+			if len(food) >= dropCount {
+				break
+			}
 			food = append(food, NewFoodAt(seg.X, seg.Y))
 		}
 	}

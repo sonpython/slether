@@ -325,10 +325,20 @@ export class GameRenderer {
     const boosting = snake.boosting;
     const r = snake.width || SEGMENT_RADIUS; // server-driven width
 
-    // Culling: skip if neither head nor tail visible
-    const head = segments[0];
-    const tailCheck = segments[segments.length - 1];
-    if (!cam.isVisible(head.x, head.y, r + 40) && !cam.isVisible(tailCheck.x, tailCheck.y, r + 40)) return;
+    // Culling: skip only if NO segment is near the viewport
+    // Check head, tail, and sampled body segments to catch snakes curving through viewport
+    const cullPad = r + 40;
+    let anyVisible = false;
+    const step = Math.max(1, Math.floor(segments.length / 8)); // check ~8 evenly-spaced points
+    for (let ci = 0; ci < segments.length; ci += step) {
+      if (cam.isVisible(segments[ci].x, segments[ci].y, cullPad)) { anyVisible = true; break; }
+    }
+    // Always check last segment too
+    if (!anyVisible) {
+      const last = segments[segments.length - 1];
+      if (cam.isVisible(last.x, last.y, cullPad)) anyVisible = true;
+    }
+    if (!anyVisible) return;
 
     ctx.save();
 
