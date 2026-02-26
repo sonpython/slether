@@ -151,8 +151,15 @@ func (w *World) SnakesInViewport(cx, cy float64) []SnakeDTO {
 		if !s.Alive {
 			continue
 		}
-		head := s.Head()
-		if head.X >= minX && head.X <= maxX && head.Y >= minY && head.Y <= maxY {
+		// Check if ANY segment is in viewport (not just head)
+		visible := false
+		for _, seg := range s.Segments {
+			if seg.X >= minX && seg.X <= maxX && seg.Y >= minY && seg.Y <= maxY {
+				visible = true
+				break
+			}
+		}
+		if visible {
 			result = append(result, s.ToDTO(0))
 		}
 	}
