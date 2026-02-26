@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Slether</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Game canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Feature 2: Mobile touch position indicator -->
+  <div id="touchIndicator"></div>
+
+  <!-- Connection status (top-left) -->
+  <div id="connectionStatus">
+    <span class="dot disconnected" id="connDot"></span>
+    <span id="connLabel">Connecting...</span>
+  </div>
+
+  <!-- Leaderboard (top-right) -->
+  <div id="leaderboard" class="hidden">
+    <h3>Leaderboard</h3>
+    <ol id="lbList"></ol>
+  </div>
+
+  <!-- Score display (bottom-center) -->
+  <div id="scoreDisplay" class="hidden">
+    <span class="score-label">Score</span>
+    <span id="scoreValue">0</span>
+  </div>
+
+  <!-- Join screen overlay -->
+  <div id="joinScreen" class="overlay">
+    <div class="card">
+      <h1>Slether</h1>
+      <p class="subtitle">Eat food. Grow big. Outlast everyone.</p>
+      <input
+        id="nameInput"
+        type="text"
+        maxlength="20"
+        placeholder="Enter your name..."
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="playBtn" class="btn btn-primary">Play</button>
+    </div>
+  </div>
+
+  <!-- Death screen overlay -->
+  <div id="deathScreen" class="overlay hidden">
+    <div class="card">
+      <h2>You Died</h2>
+      <div class="death-score" id="deathScore">0</div>
+      <p class="death-killer" id="deathKiller">Killed by <span>unknown</span></p>
+      <button id="respawnBtn" class="btn btn-danger">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Bootstrap the game -->
+  <script type="module">
+    import { GameClient } from './game-client.js';
+    const game = new GameClient();
+    game.start();
+    window._game = game; // expose for debugging
+  </script>
+
+</body>
+</html>

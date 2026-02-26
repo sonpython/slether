@@ -1,0 +1,13 @@
+# Go
+server/server
+*.exe
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/
