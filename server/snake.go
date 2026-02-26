@@ -129,14 +129,24 @@ func (s *Snake) ApplyInput(angle float64, boost bool) *Food {
 	if boost {
 		s.Speed = SnakeBoostSpeed
 		s.BoostTicks++
-		// Lose a segment every N boost ticks to "cost" boost — drop level-3 food at tail
+		// Lose a segment every N boost ticks to "cost" boost
 		if s.BoostTicks%SnakeBoostCostTicks == 0 && len(s.Segments) > SnakeMinSegments {
 			tail := s.Segments[len(s.Segments)-1]
 			s.Segments = s.Segments[:len(s.Segments)-1]
 			s.Score--
-			f := newFoodWithLevel(tail.X, tail.Y, FoodLevel3, false)
-			f.Color = s.Color // boost food matches snake color
-			return f
+			// Shrink width proportionally when losing segments
+			widthLoss := 4.0 / float64(len(s.Segments)+1)
+			s.Width -= widthLoss
+			if s.Width < SnakeBaseWidth {
+				s.Width = SnakeBaseWidth
+			}
+			// Only drop food 80% of the time (20% pure cost)
+			if rand.Float64() < 0.8 {
+				f := newFoodWithLevel(tail.X, tail.Y, FoodLevel3, false)
+				f.Color = s.Color
+				return f
+			}
+			return nil
 		}
 	} else {
 		s.Speed = SnakeNormalSpeed

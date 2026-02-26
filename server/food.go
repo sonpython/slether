@@ -34,11 +34,14 @@ func NewFood() *Food {
 	return newFoodWithLevel(x, y, level, false)
 }
 
-// NewFoodAt creates a level-5 food item at a specific position (used on snake death).
+// NewFoodAt creates a level-3 food item near a position (used on snake death).
+// Scatters ±20px to spread food along the body instead of piling up.
 func NewFoodAt(x, y float64) *Food {
-	// Clamp position inside circle
-	cx, cy := clampToCircle(x, y, WorldCenterX, WorldCenterY, WorldRadius)
-	return newFoodWithLevel(cx, cy, FoodLevel5, false)
+	scatter := 20.0
+	sx := x + (rand.Float64()*2-1)*scatter
+	sy := y + (rand.Float64()*2-1)*scatter
+	cx, cy := clampToCircle(sx, sy, WorldCenterX, WorldCenterY, WorldRadius)
+	return newFoodWithLevel(cx, cy, FoodLevel3, false)
 }
 
 // NewMovingFood creates a level-10 moving food at a random position inside the world.

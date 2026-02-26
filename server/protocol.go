@@ -83,13 +83,12 @@ type LeaderboardEntry struct {
 	Score int    `json:"p"`
 }
 
-// MinimapDot is a lightweight snake position for the minimap.
-// {"x":1.0,"y":2.0,"c":"#fff","w":10}
-type MinimapDot struct {
-	X     float64 `json:"x"`
-	Y     float64 `json:"y"`
-	Color string  `json:"c"`
-	Width float64 `json:"w"` // snake width for proportional dot size
+// MinimapSnake is a downsampled snake for the minimap — only includes snakes visible at minimap scale.
+// {"s":[[x,y],...],"c":"#fff","w":10}
+type MinimapSnake struct {
+	Segments [][2]float64 `json:"s"`
+	Color    string       `json:"c"`
+	Width    float64      `json:"w"`
 }
 
 // StateMsg is the per-tick state update sent to each client.
@@ -99,7 +98,7 @@ type StateMsg struct {
 	Snakes      []SnakeDTO         `json:"s"`
 	Food        []FoodDTO          `json:"f"`
 	Leaderboard []LeaderboardEntry `json:"l"`
-	Minimap     []MinimapDot       `json:"m,omitempty"`
+	Minimap     []MinimapSnake      `json:"m,omitempty"`
 }
 
 // DeathMsg is sent to a player when their snake dies.

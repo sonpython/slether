@@ -511,20 +511,23 @@ export class GameRenderer {
     ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw ALL alive snakes proportionally — server sends every snake's head pos + width
+    // Draw visible snakes as body lines — server sends downsampled segments
     if (minimapDots) {
-      for (const dot of minimapDots) {
-        const dx = dot.x - worldR;
-        const dy = dot.y - worldR;
-        const sx = cx + dx * scale;
-        const sy = cy + dy * scale;
-        // Dot size proportional to snake width, minimum 1px
-        const dotR = Math.max(1, dot.width * scale * 1.5);
-
+      for (const snake of minimapDots) {
+        if (!snake.segments || snake.segments.length < 2) continue;
+        const lineW = Math.max(1, snake.width * scale);
         ctx.beginPath();
-        ctx.arc(sx, sy, dotR, 0, Math.PI * 2);
-        ctx.fillStyle = dot.color || '#888';
-        ctx.fill();
+        const s0 = snake.segments[0];
+        ctx.moveTo(cx + (s0.x - worldR) * scale, cy + (s0.y - worldR) * scale);
+        for (let i = 1; i < snake.segments.length; i++) {
+          const s = snake.segments[i];
+          ctx.lineTo(cx + (s.x - worldR) * scale, cy + (s.y - worldR) * scale);
+        }
+        ctx.strokeStyle = snake.color || '#888';
+        ctx.lineWidth = lineW;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
       }
     }
 

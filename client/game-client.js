@@ -171,9 +171,11 @@ export class GameClient {
       score: e.p,
     }));
 
-    // Minimap dots: all alive snakes in world (head pos + color + width)
+    // Minimap snakes: downsampled segments + color + width (only visible-size snakes)
     const minimap = (msg.m || []).map(d => ({
-      x: d.x, y: d.y, color: d.c, width: d.w || 10,
+      segments: (d.s || []).map(seg => ({ x: seg[0], y: seg[1] })),
+      color: d.c,
+      width: d.w || 10,
     }));
 
     this._prevState = this._currState;

@@ -2,10 +2,50 @@ package main
 
 import (
 	"log"
+	"net"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+// ipRateLimiter tracks last connection time per IP to prevent abuse
+type ipRateLimiter struct {
+	mu    sync.Mutex
+	times map[string]time.Time
+}
+
+func newIPRateLimiter() *ipRateLimiter {
+	rl := &ipRateLimiter{times: make(map[string]time.Time)}
+	// Cleanup stale entries every 60s
+	go func() {
+		for range time.Tick(60 * time.Second) {
+			rl.mu.Lock()
+			cutoff := time.Now().Add(-time.Duration(IPCooldownSec) * time.Second)
+			for ip, t := range rl.times {
+				if t.Before(cutoff) {
+					delete(rl.times, ip)
+				}
+			}
+			rl.mu.Unlock()
+		}
+	}()
+	return rl
+}
+
+// allow returns true if this IP can connect, and records the attempt
+func (rl *ipRateLimiter) allow(ip string) bool {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+	if last, ok := rl.times[ip]; ok {
+		if time.Since(last) < time.Duration(IPCooldownSec)*time.Second {
+			return false
+		}
+	}
+	rl.times[ip] = time.Now()
+	return true
+}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -22,9 +62,28 @@ func main() {
 	world := NewWorld()
 	conns := NewConnManager()
 	loop := NewGameLoop(world, conns)
+	rateLimiter := newIPRateLimiter()
 
 	// WebSocket handler
 	http.HandleFunc(WebSocketPath, func(w http.ResponseWriter, r *http.Request) {
+		// Extract client IP (handle X-Forwarded-For for reverse proxies)
+		ip := r.Header.Get("X-Forwarded-For")
+		if ip == "" {
+			ip, _, _ = net.SplitHostPort(r.RemoteAddr)
+		}
+
+		// Max player cap
+		if conns.Count() >= MaxPlayers {
+			http.Error(w, "server full", http.StatusServiceUnavailable)
+			return
+		}
+
+		// IP rate limit (30s cooldown)
+		if !rateLimiter.allow(ip) {
+			http.Error(w, "too many connections, wait 30s", http.StatusTooManyRequests)
+			return
+		}
+
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Printf("ws upgrade error: %v", err)

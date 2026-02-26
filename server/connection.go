@@ -104,6 +104,13 @@ func (m *ConnManager) Get(id string) (*Conn, bool) {
 	return c, ok
 }
 
+// Count returns the number of active connections
+func (m *ConnManager) Count() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.conns)
+}
+
 // Snapshot returns a copy of all current connections
 func (m *ConnManager) Snapshot() []*Conn {
 	m.mu.RLock()

@@ -32,15 +32,15 @@ const (
 	SnakeMaxWidth       = 28.0 // cap visual radius
 	// Turn rate: max radians per tick the snake can rotate.
 	// Bigger snakes turn slower. Formula: MaxTurnRate / (1 + segments * TurnScaleFactor)
-	SnakeMaxTurnRate   = 0.18 // radians/tick at minimum size (~10 degrees)
-	SnakeTurnScaleFactor = 0.008 // how much each segment reduces turn rate
+	SnakeMaxTurnRate   = 0.18  // radians/tick at minimum size (~10 degrees)
+	SnakeTurnScaleFactor = 0.001 // very slight turn penalty per segment — big snakes stay agile
 
 	// Food
 	InitialFoodCount = 12500
 	TargetFoodCount  = 12500
 	FoodRadius       = 5.0
 	FoodBaseValue    = 1
-	DeathFoodPerUnit = 2  // food items dropped per body segment on death
+	DeathFoodPerUnit = 3  // drop 1 food per N body segments on death
 	FoodSpawnPerTick = 100 // max food respawn per tick to maintain target
 
 	// Food levels
@@ -87,6 +87,10 @@ const (
 	BotChaseRadius    = 300.0 // px — smaller snake heads within this range are chased
 	BotFleeRadius     = 200.0 // px — bigger snake heads within this range trigger flee
 	BotBoundaryBuffer = 500.0 // px — steer toward center when this close to boundary
+
+	// Rate limiting / anti-abuse
+	MaxPlayers       = 8000 // max concurrent WebSocket connections
+	IPCooldownSec    = 30   // seconds between new connections from same IP
 )
 
 // Player colors palette

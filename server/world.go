@@ -159,22 +159,48 @@ func (w *World) SnakesInViewport(cx, cy float64) []SnakeDTO {
 	return result
 }
 
-// MinimapDots returns head position + color + width for ALL alive snakes (for minimap)
-func (w *World) MinimapDots() []MinimapDot {
-	dots := make([]MinimapDot, 0, len(w.Snakes))
+// MinimapSnakes returns downsampled snake bodies for the minimap.
+// Only includes snakes whose total body length is >= 1px on minimap.
+// Segments are downsampled to keep wire size small.
+func (w *World) MinimapSnakes() []MinimapSnake {
+	const minimapDiameter = 160.0
+	worldDiameter := WorldRadius * 2
+	scale := minimapDiameter / worldDiameter
+	// Minimum body length to appear on minimap (1px = ~131 world units = ~16 segments)
+	minSegments := int(1.0 / (scale * SnakeSegmentSpacing))
+	if minSegments < 2 {
+		minSegments = 2
+	}
+
+	result := make([]MinimapSnake, 0)
 	for _, s := range w.Snakes {
-		if !s.Alive {
+		if !s.Alive || len(s.Segments) < minSegments {
 			continue
 		}
-		head := s.Head()
-		dots = append(dots, MinimapDot{
-			X:     roundTo1(head.X),
-			Y:     roundTo1(head.Y),
-			Color: s.Color,
-			Width: roundTo1(s.Width),
-		})
+		// Downsample: keep ~1 point per minimap pixel of body length
+		step := minSegments
+		segs := make([][2]float64, 0, len(s.Segments)/step+2)
+		for i := 0; i < len(s.Segments); i += step {
+			p := s.Segments[i]
+			segs = append(segs, [2]float64{roundTo1(p.X), roundTo1(p.Y)})
+		}
+		// Always include last segment
+		if len(s.Segments) > 0 {
+			last := s.Segments[len(s.Segments)-1]
+			lastPt := [2]float64{roundTo1(last.X), roundTo1(last.Y)}
+			if len(segs) == 0 || segs[len(segs)-1] != lastPt {
+				segs = append(segs, lastPt)
+			}
+		}
+		if len(segs) >= 2 {
+			result = append(result, MinimapSnake{
+				Segments: segs,
+				Color:    s.Color,
+				Width:    roundTo1(s.Width),
+			})
+		}
 	}
-	return dots
+	return result
 }
 
 // FoodInViewport returns food DTOs visible from viewport centered on (cx,cy)

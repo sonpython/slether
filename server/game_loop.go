@@ -192,8 +192,9 @@ func (gl *GameLoop) applyFoodMagnet() {
 			continue
 		}
 		head := snake.Head()
-		// Use spatial grid to find nearby food within MagnetRadius
-		nearFoodIDs := w.Grid.NearbyFood(head.X, head.Y, MagnetRadius)
+		// Scale magnet radius with snake width (wider snake = bigger attraction zone)
+		magnetR := MagnetRadius * (snake.Width / SnakeBaseWidth)
+		nearFoodIDs := w.Grid.NearbyFood(head.X, head.Y, magnetR)
 		for _, fid := range nearFoodIDs {
 			food, ok := w.Food[fid]
 			if !ok {
@@ -315,7 +316,7 @@ func (gl *GameLoop) broadcast(leaderboard []LeaderboardEntry) {
 
 	// Compute minimap dots once for all players
 	w.mu.RLock()
-	minimapDots := w.MinimapDots()
+	minimapDots := w.MinimapSnakes()
 	w.mu.RUnlock()
 
 	for _, c := range conns {
