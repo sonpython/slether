@@ -10,23 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build server
+      - name: Rebuild and restart slether container
+        working-directory: /opt/slether
         run: |
-          cd server
-          go build -o slether-server .
-
-      - name: Deploy
-        run: |
-          # Stop current server
-          sudo systemctl stop slether || true
-
-          # Copy built binary and client files
-          cp server/slether-server /home/slether/app/server/slether-server
-          rsync -a --delete client/ /home/slether/app/client/
-
-          # Start server
-          sudo systemctl start slether
-
-          # Verify it's running
-          sleep 2
-          systemctl is-active slether
+          git pull origin main
+          docker compose --env-file .env.production build slether
+          docker compose --env-file .env.production up -d slether
