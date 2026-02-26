@@ -20,7 +20,9 @@ jobs:
           docker run -d \
             --name slether-slether-1 \
             --network slether_default \
+            --network-alias slether \
             --restart unless-stopped \
             --cpus 1.0 \
             --memory 512m \
+            -p 8080:8080 \
             slether-slether
