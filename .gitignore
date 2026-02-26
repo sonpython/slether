@@ -9,5 +9,9 @@ server/server
 .vscode/
 .idea/
 
+# Secrets
+.env.production
+.env
+
 # Claude
 .claude/

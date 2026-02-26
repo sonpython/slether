@@ -1,11 +1,39 @@
 services:
   slether:
     build: .
-    ports:
-      - "8080:8080"
     restart: unless-stopped
     deploy:
       resources:
         limits:
           cpus: "1.0"
           memory: 512M
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - slether
+
+  runner:
+    image: myoung34/github-runner:latest
+    restart: unless-stopped
+    environment:
+      - REPO_URL=${GITHUB_REPO_URL}
+      - ACCESS_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_NAME=${GITHUB_RUNNER_NAME:-slether-runner}
+      - RUNNER_WORKDIR=/tmp/runner/work
+      - LABELS=self-hosted,linux,x64
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - runner-work:/tmp/runner/work
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+volumes:
+  runner-work:
