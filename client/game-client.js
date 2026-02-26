@@ -171,8 +171,13 @@ export class GameClient {
       score: e.p,
     }));
 
+    // Minimap dots: all alive snakes in world (head pos + color + width)
+    const minimap = (msg.m || []).map(d => ({
+      x: d.x, y: d.y, color: d.c, width: d.w || 10,
+    }));
+
     this._prevState = this._currState;
-    this._currState = { snakes, food, leaderboard };
+    this._currState = { snakes, food, leaderboard, minimap };
     this._lastStateTime = performance.now();
 
     // Attach color from snake data into leaderboard entries
@@ -266,6 +271,7 @@ export class GameClient {
         prev: this._prevState ? this._prevState.snakes : null,
         curr: this._currState ? this._currState.snakes : [],
         food: this._currState ? this._currState.food : [],
+        minimap: this._currState ? this._currState.minimap : [],
       };
 
       this.renderer.render(renderState, this.myId, alpha, now);

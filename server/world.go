@@ -159,6 +159,24 @@ func (w *World) SnakesInViewport(cx, cy float64) []SnakeDTO {
 	return result
 }
 
+// MinimapDots returns head position + color + width for ALL alive snakes (for minimap)
+func (w *World) MinimapDots() []MinimapDot {
+	dots := make([]MinimapDot, 0, len(w.Snakes))
+	for _, s := range w.Snakes {
+		if !s.Alive {
+			continue
+		}
+		head := s.Head()
+		dots = append(dots, MinimapDot{
+			X:     roundTo1(head.X),
+			Y:     roundTo1(head.Y),
+			Color: s.Color,
+			Width: roundTo1(s.Width),
+		})
+	}
+	return dots
+}
+
 // FoodInViewport returns food DTOs visible from viewport centered on (cx,cy)
 func (w *World) FoodInViewport(cx, cy float64) []FoodDTO {
 	halfW := ViewportWidth/2 + ViewportBuffer

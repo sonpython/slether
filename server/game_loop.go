@@ -313,6 +313,11 @@ func (gl *GameLoop) broadcast(leaderboard []LeaderboardEntry) {
 	w := gl.world
 	conns := gl.conns.Snapshot()
 
+	// Compute minimap dots once for all players
+	w.mu.RLock()
+	minimapDots := w.MinimapDots()
+	w.mu.RUnlock()
+
 	for _, c := range conns {
 		w.mu.RLock()
 		snake, hasSnake := w.Snakes[c.ID]
@@ -322,7 +327,6 @@ func (gl *GameLoop) broadcast(leaderboard []LeaderboardEntry) {
 			head := snake.Head()
 			cx, cy = head.X, head.Y
 		} else {
-			// Send empty state for dead/unjoined players
 			w.mu.RUnlock()
 			_ = c.Send(StateMsg{
 				Type:        MsgState,
@@ -342,6 +346,7 @@ func (gl *GameLoop) broadcast(leaderboard []LeaderboardEntry) {
 			Snakes:      snakeDTOs,
 			Food:        foodDTOs,
 			Leaderboard: leaderboard,
+			Minimap:     minimapDots,
 		}
 		if err := c.Send(msg); err != nil {
 			log.Printf("send error to %s: %v", c.ID, err)

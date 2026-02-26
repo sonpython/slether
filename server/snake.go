@@ -92,8 +92,8 @@ func (s *Snake) Grow(amount int) {
 		s.Segments = append(s.Segments, tail)
 	}
 	s.Score += amount
-	// Width grows proportionally: 2 * food_value / total_length (2x multiplier for visible growth)
-	widthGain := 2.0 * float64(amount) / float64(len(s.Segments))
+	// Width grows proportionally: 4 * food_value / total_length (4x multiplier for visible growth)
+	widthGain := 4.0 * float64(amount) / float64(len(s.Segments))
 	s.Width += widthGain
 	if s.Width > SnakeMaxWidth {
 		s.Width = SnakeMaxWidth

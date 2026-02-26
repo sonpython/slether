@@ -54,7 +54,7 @@ export class GameRenderer {
     this._drawWorldBoundary();       // Feature 1: circular boundary
     this._drawFood(state.food, now); // Feature 3 & 6: multi-size + neon blink + trail
     this._drawSnakes(state.prev, state.curr, myId, alpha);
-    this._drawMinimap(state.curr, myId);
+    this._drawMinimap(state.minimap || [], myId);
   }
 
   // ── Grid ──────────────────────────────────────────────────────────────────
@@ -486,7 +486,7 @@ export class GameRenderer {
 
   // ── Feature 1: Minimap — circular world ──────────────────────────────────
 
-  _drawMinimap(snakes, myId) {
+  _drawMinimap(minimapDots, myId) {
     const ctx = this.ctx;
     const W = this.canvas.width;
     const H = this.canvas.height;
@@ -494,52 +494,54 @@ export class GameRenderer {
     const cx = W - r - MINIMAP_MARGIN;
     const cy = H - r - MINIMAP_MARGIN;
     const worldR = this.worldRadius;
-    // Scale: minimap circle radius maps to world circle radius
     const scale = r / worldR;
 
     ctx.save();
 
-    // Clip to circular minimap area
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.clip();
 
-    // Background
     ctx.fillStyle = 'rgba(8, 8, 20, 0.78)';
     ctx.fill();
 
-    // World boundary circle on minimap
     ctx.strokeStyle = 'rgba(255,80,80,0.5)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Draw snake dots — positions are world coords, center=(worldR,worldR)
-    if (snakes) {
-      for (const snake of snakes) {
-        if (!snake.segments || snake.segments.length === 0) continue;
-        const head = snake.segments[0];
-        // Convert world pos relative to world center, then to minimap
-        const dx = head.x - worldR;
-        const dy = head.y - worldR;
+    // Draw ALL alive snakes proportionally — server sends every snake's head pos + width
+    if (minimapDots) {
+      for (const dot of minimapDots) {
+        const dx = dot.x - worldR;
+        const dy = dot.y - worldR;
         const sx = cx + dx * scale;
         const sy = cy + dy * scale;
-        const isMe = snake.id === myId;
+        // Dot size proportional to snake width, minimum 1px
+        const dotR = Math.max(1, dot.width * scale * 1.5);
 
         ctx.beginPath();
-        ctx.arc(sx, sy, isMe ? 4 : 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = isMe ? '#ffffff' : (snake.color || '#888');
-        if (isMe) {
-          ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 6;
-        }
+        ctx.arc(sx, sy, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = dot.color || '#888';
         ctx.fill();
-        ctx.shadowBlur = 0;
       }
     }
 
-    // Restore clip, draw minimap border ring on top
+    // Player position indicator — white ring at camera center (player head)
+    const camX = this.camera.x;
+    const camY = this.camera.y;
+    const px = cx + (camX - worldR) * scale;
+    const py = cy + (camY - worldR) * scale;
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 6;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
     ctx.restore();
 
     ctx.save();
