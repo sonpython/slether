@@ -22,7 +22,7 @@ jobs:
             --network slether_default \
             --network-alias slether \
             --restart unless-stopped \
-            --cpus 1.0 \
-            --memory 512m \
+            --cpus 2.0 \
+            --memory 2048m \
             -p 8080:8080 \
             slether-slether

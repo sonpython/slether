@@ -5,8 +5,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: 512M
+          cpus: "2.0"
+          memory: 2048M
 
   cloudflared:
     image: cloudflare/cloudflared:latest
