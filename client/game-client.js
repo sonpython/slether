@@ -127,6 +127,9 @@ export class GameClient {
       case 'd':
         this._onDeath(msg);
         break;
+      case 'e':
+        this._onError(msg);
+        break;
       default:
         console.warn('Unknown message type:', msg.t);
     }
@@ -215,6 +218,12 @@ export class GameClient {
     this.ui.showDeathScreen(msg.p, msg.k);
   }
 
+  _onError(msg) {
+    // Server rejected connection (rate limit, full, etc)
+    this._intentionallyClosed = true; // don't auto-reconnect
+    this.ui.showError(msg.m);
+  }
+
   // ── Input ─────────────────────────────────────────────────────────────────
 
   _bindEvents() {
@@ -245,6 +254,12 @@ export class GameClient {
         // Feature 7: input uses {t:"i", a:angle, b:boost?1:0}
         this._send({ t: 'i', a: angle, b: boost ? 1 : 0 });
       }
+    });
+
+    // Retry after rate limit countdown
+    window.addEventListener('slether-retry', () => {
+      this._intentionallyClosed = false;
+      this._connect();
     });
 
     // Canvas resize

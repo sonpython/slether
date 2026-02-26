@@ -26,6 +26,7 @@ const (
 	MsgWelcome = "w"
 	MsgState   = "s"
 	MsgDeath   = "d"
+	MsgError   = "e"
 )
 
 // ClientMessage is the base incoming message from the browser.
@@ -108,4 +109,11 @@ type DeathMsg struct {
 	Type   string `json:"t"`
 	Killer string `json:"k"`
 	Score  int    `json:"p"`
+}
+
+// ErrorMsg is sent when the server rejects a connection (rate limit, full, etc).
+// {"t":"e","m":"message"}
+type ErrorMsg struct {
+	Type    string `json:"t"`
+	Message string `json:"m"`
 }

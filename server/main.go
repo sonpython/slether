@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
@@ -59,6 +60,13 @@ var upgrader = websocket.Upgrader{
 	EnableCompression: true,
 }
 
+// sendErrorAndClose sends an error message via WebSocket then closes the connection
+func sendErrorAndClose(ws *websocket.Conn, msg string) {
+	data, _ := json.Marshal(ErrorMsg{Type: MsgError, Message: msg})
+	_ = ws.WriteMessage(websocket.TextMessage, data)
+	ws.Close()
+}
+
 func main() {
 	world := NewWorld()
 	conns := NewConnManager()
@@ -73,21 +81,19 @@ func main() {
 			ip, _, _ = net.SplitHostPort(r.RemoteAddr)
 		}
 
-		// Max player cap
-		if conns.Count() >= MaxPlayers {
-			http.Error(w, "server full", http.StatusServiceUnavailable)
-			return
-		}
-
-		// IP rate limit (30s cooldown)
-		if !rateLimiter.allow(ip) {
-			http.Error(w, "too many connections, wait 30s", http.StatusTooManyRequests)
-			return
-		}
-
 		ws, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Printf("ws upgrade error: %v", err)
+			return
+		}
+
+		// Check limits after upgrade so client can receive error messages
+		if conns.Count() >= MaxPlayers {
+			sendErrorAndClose(ws, "Server full. Please try again later.")
+			return
+		}
+		if !rateLimiter.allow(ip) {
+			sendErrorAndClose(ws, "Too many connections. Please wait 30 seconds.")
 			return
 		}
 

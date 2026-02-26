@@ -117,6 +117,27 @@ export class UIManager {
     });
   }
 
+  showError(message) {
+    // Show error on join screen with countdown
+    this.showJoinScreen();
+    this._connDot.classList.add('disconnected');
+    this._connLabel.textContent = message;
+    // Auto-clear after 30s
+    let remaining = 30;
+    const timer = setInterval(() => {
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(timer);
+        this._connLabel.textContent = 'Ready';
+        this._connDot.classList.remove('disconnected');
+        // Trigger reconnect
+        window.dispatchEvent(new CustomEvent('slether-retry'));
+      } else {
+        this._connLabel.textContent = `Wait ${remaining}s...`;
+      }
+    }, 1000);
+  }
+
   setConnectionStatus(connected) {
     if (connected) {
       this._connDot.classList.remove('disconnected');
