@@ -10,9 +10,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Rebuild and restart slether
+      - name: Build new image
+        run: docker build -t slether-slether .
+
+      - name: Restart slether container
         run: |
-          cd /opt/slether
-          git pull origin main
-          docker compose --env-file .env.production build slether
-          docker compose --env-file .env.production up -d slether
+          docker stop slether-slether-1 2>/dev/null || true
+          docker rm slether-slether-1 2>/dev/null || true
+          docker run -d \
+            --name slether-slether-1 \
+            --network slether_default \
+            --restart unless-stopped \
+            --cpus 1.0 \
+            --memory 512m \
+            slether-slether
