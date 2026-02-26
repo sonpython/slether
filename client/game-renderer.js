@@ -333,14 +333,13 @@ export class GameRenderer {
     ctx.save();
 
     // Draw body segments (tail → head so head overlaps)
+    // Alternating light/dark bands like Slither.io + subtle ridge lines on dark bands
     for (let i = segments.length - 1; i >= 1; i--) {
       const seg = segments[i];
       if (!cam.isVisible(seg.x, seg.y, r + 8)) continue;
       const s = cam.worldToScreen(seg.x, seg.y);
 
-      const segAlpha = 0.85 + (isMe ? 0.15 : 0);
-
-      // Boost: neon glow + pulsing ripple ring around each segment
+      // Boost: neon glow + pulsing ripple ring
       if (boosting) {
         const pulse = (Math.sin((this._now || 0) / 80 + i * 0.5) + 1) * 0.5;
         ctx.shadowColor = color;
@@ -356,14 +355,38 @@ export class GameRenderer {
         ctx.shadowBlur = 0;
       }
 
-      // Base segment circle
+      // Alternating bands: every 2 segments, toggle light/dark
+      const bandGroup = Math.floor(i / 2);
+      const isDark = (bandGroup % 2) === 0;
+
+      // Base segment — dark bands are slightly darker
       ctx.beginPath();
       ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
-      ctx.fillStyle = this._alphaColor(color, segAlpha);
+      ctx.fillStyle = isDark ? this._darkenColor(color, 0.15, 1.0) : color;
       ctx.fill();
 
-      // Crescent scale pattern
-      this._drawSegmentCrescent(ctx, s, r, color, i, segments);
+      // Top highlight — 3D cylinder effect (lighter on top half)
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${isDark ? 0.04 : 0.1})`;
+      ctx.fill();
+
+      // Ridge groove line across segment (perpendicular to body direction)
+      // Only on dark bands — subtle horizontal line like scale grooves
+      if (isDark && i < segments.length - 1) {
+        const prev = segments[i - 1] || segments[0];
+        const prevS = cam.worldToScreen(prev.x, prev.y);
+        const angle = Math.atan2(prevS.y - s.y, prevS.x - s.x);
+        const perpX = -Math.sin(angle);
+        const perpY = Math.cos(angle);
+        const lineR = r * 0.75;
+        ctx.beginPath();
+        ctx.moveTo(s.x - perpX * lineR, s.y - perpY * lineR);
+        ctx.lineTo(s.x + perpX * lineR, s.y + perpY * lineR);
+        ctx.strokeStyle = `rgba(0,0,0,0.12)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
 
     // Draw head (same width as body)
@@ -372,40 +395,15 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  // Stacked crescent pattern — two overlapping crescents per segment for clear distinction
-  _drawSegmentCrescent(ctx, screenPos, radius, color, segIndex, segments) {
-    if (segIndex >= segments.length - 1) return;
-
-    // Direction from this segment to previous (toward head) for crescent orientation
-    const prev = segments[segIndex - 1] || segments[0];
-    const cam = this.camera;
-    const prevS = cam.worldToScreen(prev.x, prev.y);
-    const angle = Math.atan2(prevS.y - screenPos.y, prevS.x - screenPos.x);
-
-    const isAlt = (segIndex % 2) === 0;
-
-    ctx.save();
-    ctx.translate(screenPos.x, screenPos.y);
-    ctx.rotate(angle);
-
-    // Upper crescent — lighter arc near the "forward" edge
-    const r1 = radius * 0.75;
-    ctx.beginPath();
-    ctx.arc(radius * 0.15, 0, r1, -0.7, 0.7, false);
-    ctx.arc(radius * 0.15, 0, r1 * 0.5, 0.7, -0.7, true);
-    ctx.closePath();
-    ctx.fillStyle = this._lightenColor(color, isAlt ? 0.5 : 0.3, isAlt ? 0.4 : 0.25);
-    ctx.fill();
-
-    // Lower crescent — darker accent for depth
-    ctx.beginPath();
-    ctx.arc(-radius * 0.1, 0, r1 * 0.6, -0.5, 0.5, false);
-    ctx.arc(-radius * 0.1, 0, r1 * 0.25, 0.5, -0.5, true);
-    ctx.closePath();
-    ctx.fillStyle = this._alphaColor(color, isAlt ? 0.15 : 0.1);
-    ctx.fill();
-
-    ctx.restore();
+  // Darken a hex color by amount (0-1), with given alpha
+  _darkenColor(hex, amount, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const dr = Math.round(r * (1 - amount));
+    const dg = Math.round(g * (1 - amount));
+    const db = Math.round(b * (1 - amount));
+    return `rgba(${dr},${dg},${db},${alpha})`;
   }
 
   _drawHead(ctx, cam, segments, color, isMe, name, boosting = false, width = HEAD_RADIUS) {
