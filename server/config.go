@@ -80,7 +80,7 @@ const (
 	CollisionCheckRadius = 20.0 // radius for head-to-body collision check
 
 	// Bot AI
-	BotCount          = 20    // number of AI bots to maintain
+	BotCount          = 50    // number of AI bots to maintain
 	BotRespawnDelay   = 100   // ticks before respawning a dead bot (~5 sec at 20 tps)
 	BotDangerRadius   = 80.0  // px — body segments closer than this trigger avoidance
 	BotFoodSeekRadius = 500.0 // px — food within this range is targeted (was 200)

@@ -226,9 +226,9 @@ func (bm *BotManager) decideBotInput(bot *Bot, snake *Snake) (float64, bool) {
 
 	// --- Priority 6: Proactive roam — move toward center bias (food denser there) ---
 	if bot.wanderTicks <= 0 {
-		// 60% chance: roam toward a random point closer to center (food-rich)
-		// 40% chance: pure random direction for exploration
-		if rand.Float64() < 0.6 {
+		// 80% chance: roam toward a random point closer to center (food-rich)
+		// 20% chance: pure random direction for exploration
+		if rand.Float64() < 0.8 {
 			// Pick random point within inner 70% of world
 			targetR := WorldRadius * 0.7 * math.Sqrt(rand.Float64())
 			targetA := rand.Float64() * 2 * math.Pi
@@ -238,7 +238,7 @@ func (bm *BotManager) decideBotInput(bot *Bot, snake *Snake) (float64, bool) {
 		} else {
 			bot.targetAngle = rand.Float64() * 2 * math.Pi
 		}
-		bot.wanderTicks = 40 + rand.Intn(60)
+		bot.wanderTicks = 20 + rand.Intn(30)
 	}
 	bot.wanderTicks--
 	return bot.targetAngle, boost

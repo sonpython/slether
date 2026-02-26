@@ -332,28 +332,31 @@ export class GameRenderer {
 
     ctx.save();
 
-    // Draw body segments (tail → head so head overlaps)
-    // Alternating light/dark bands like Slither.io + subtle ridge lines on dark bands
+    // Pass 1: If boosting, draw glow layer FIRST (behind everything)
+    if (boosting) {
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 30;
+      ctx.fillStyle = this._alphaColor(color, 0.4);
+      for (let i = segments.length - 1; i >= 1; i--) {
+        const seg = segments[i];
+        if (!cam.isVisible(seg.x, seg.y, r + 20)) continue;
+        const s = cam.worldToScreen(seg.x, seg.y);
+        const pulse = (Math.sin((this._now || 0) / 80 + i * 0.5) + 1) * 0.5;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, r + 3 + pulse * 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // Pass 2: Body segments — banded pattern + ridge grooves
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
     for (let i = segments.length - 1; i >= 1; i--) {
       const seg = segments[i];
       if (!cam.isVisible(seg.x, seg.y, r + 8)) continue;
       const s = cam.worldToScreen(seg.x, seg.y);
-
-      // Boost: neon glow + pulsing ripple ring
-      if (boosting) {
-        const pulse = (Math.sin((this._now || 0) / 80 + i * 0.5) + 1) * 0.5;
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 24 + pulse * 12;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, r + 2 + pulse * 4, 0, Math.PI * 2);
-        ctx.strokeStyle = this._alphaColor(color, 0.3 + pulse * 0.4);
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.shadowBlur = 18;
-      } else {
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-      }
 
       // Alternating bands: every 2 segments, toggle light/dark
       const bandGroup = Math.floor(i / 2);
