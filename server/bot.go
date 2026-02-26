@@ -80,10 +80,9 @@ func (bm *BotManager) Update() {
 		}
 		outOfBounds := snake.Move()
 		if outOfBounds {
-			// Treat boundary crossing as death — DropFood is handled by game_loop
-			// detectCollisions won't catch this, so we mark it dead here
-			// and let HandleDeaths pick it up via the dead-snake scan
-			snake.DropFood()
+			// Boundary death — drop food into world and mark dead
+			dropped := snake.DropFood()
+			w.AddFood(dropped)
 		}
 	}
 }
@@ -262,16 +261,24 @@ func (bm *BotManager) HandleDeaths(deaths map[string]string) {
 // tickRespawns decrements respawn counters and triggers spawning when ready.
 // Must be called while world.mu is NOT held (SpawnBot acquires the lock).
 func (bm *BotManager) tickRespawns() {
+	// Collect IDs to respawn (can't modify map during range)
+	var toRespawn []string
 	for botID, bot := range bm.bots {
 		if bot.respawnIn <= 0 {
 			continue
 		}
 		bot.respawnIn--
 		if bot.respawnIn == 0 {
-			// Remove old dead entry, spawn fresh bot
-			delete(bm.bots, botID)
-			bm.SpawnBot()
+			toRespawn = append(toRespawn, botID)
 		}
+	}
+	for _, oldID := range toRespawn {
+		// Remove old dead snake from world + bot registry
+		bm.world.mu.Lock()
+		delete(bm.world.Snakes, oldID)
+		bm.world.mu.Unlock()
+		delete(bm.bots, oldID)
+		bm.SpawnBot()
 	}
 }
 
