@@ -186,8 +186,8 @@ func (bm *BotManager) decideBotInput(bot *Bot, snake *Snake) (float64, bool) {
 	bot.lastScore = snake.Score
 
 	nearFoodIDs := w.Grid.NearbyFood(head.X, head.Y, BotFoodSeekRadius)
-	if len(nearFoodIDs) > 0 && bot.seekTicks < 40 {
-		// Find the closest food item
+	if len(nearFoodIDs) > 0 && bot.seekTicks < 60 {
+		// Find closest food that's roughly in front of us (prefer reachable food)
 		bestDist := math.MaxFloat64
 		var bestFood *Food
 		for _, fid := range nearFoodIDs {
@@ -198,6 +198,12 @@ func (bm *BotManager) decideBotInput(bot *Bot, snake *Snake) (float64, bool) {
 			fdx := f.X - head.X
 			fdy := f.Y - head.Y
 			d := math.Sqrt(fdx*fdx + fdy*fdy)
+			// Prefer food in front — penalize food behind by 2x distance
+			foodAngle := math.Atan2(fdy, fdx)
+			angleDiff := math.Abs(normalizeAngle(foodAngle - currentAngle))
+			if angleDiff > math.Pi/2 {
+				d *= 2.0 // behind us, deprioritize
+			}
 			if d < bestDist {
 				bestDist = d
 				bestFood = f
@@ -209,16 +215,30 @@ func (bm *BotManager) decideBotInput(bot *Bot, snake *Snake) (float64, bool) {
 			return bot.targetAngle, boost
 		}
 	}
-	// If seek timed out (circling), force wander to break orbit
-	if bot.seekTicks >= 40 {
+	// If seek timed out (circling), force a new direction away from current heading
+	if bot.seekTicks >= 60 {
 		bot.seekTicks = 0
-		bot.wanderTicks = 0 // force new wander direction below
+		// Turn ~90-180° to break orbit pattern
+		bot.targetAngle = currentAngle + math.Pi/2 + rand.Float64()*math.Pi
+		bot.wanderTicks = 30 + rand.Intn(40)
+		return bot.targetAngle, false
 	}
 
-	// --- Priority 6: Wander ---
+	// --- Priority 6: Proactive roam — move toward center bias (food denser there) ---
 	if bot.wanderTicks <= 0 {
-		bot.targetAngle = rand.Float64() * 2 * math.Pi
-		bot.wanderTicks = randomWanderDuration()
+		// 60% chance: roam toward a random point closer to center (food-rich)
+		// 40% chance: pure random direction for exploration
+		if rand.Float64() < 0.6 {
+			// Pick random point within inner 70% of world
+			targetR := WorldRadius * 0.7 * math.Sqrt(rand.Float64())
+			targetA := rand.Float64() * 2 * math.Pi
+			tx := WorldCenterX + targetR*math.Cos(targetA)
+			ty := WorldCenterY + targetR*math.Sin(targetA)
+			bot.targetAngle = math.Atan2(ty-head.Y, tx-head.X)
+		} else {
+			bot.targetAngle = rand.Float64() * 2 * math.Pi
+		}
+		bot.wanderTicks = 40 + rand.Intn(60)
 	}
 	bot.wanderTicks--
 	return bot.targetAngle, boost

@@ -83,7 +83,7 @@ const (
 	BotCount          = 20    // number of AI bots to maintain
 	BotRespawnDelay   = 100   // ticks before respawning a dead bot (~5 sec at 20 tps)
 	BotDangerRadius   = 80.0  // px — body segments closer than this trigger avoidance
-	BotFoodSeekRadius = 200.0 // px — food within this range is targeted
+	BotFoodSeekRadius = 500.0 // px — food within this range is targeted (was 200)
 	BotChaseRadius    = 300.0 // px — smaller snake heads within this range are chased
 	BotFleeRadius     = 200.0 // px — bigger snake heads within this range trigger flee
 	BotBoundaryBuffer = 500.0 // px — steer toward center when this close to boundary
