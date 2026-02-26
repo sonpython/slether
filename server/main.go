@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -140,7 +141,11 @@ func main() {
 	})
 
 	// Serve static client files
-	fs := http.FileServer(http.Dir(StaticDir))
+	staticDir := StaticDir
+	if env := os.Getenv("SLETHER_STATIC_DIR"); env != "" {
+		staticDir = env
+	}
+	fs := http.FileServer(http.Dir(staticDir))
 	http.Handle("/", fs)
 
 	// Start game loop in background

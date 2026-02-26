@@ -1,0 +1,11 @@
+services:
+  slether:
+    build: .
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
