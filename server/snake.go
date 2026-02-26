@@ -134,7 +134,9 @@ func (s *Snake) ApplyInput(angle float64, boost bool) *Food {
 			tail := s.Segments[len(s.Segments)-1]
 			s.Segments = s.Segments[:len(s.Segments)-1]
 			s.Score--
-			return newFoodWithLevel(tail.X, tail.Y, FoodLevel3, false)
+			f := newFoodWithLevel(tail.X, tail.Y, FoodLevel3, false)
+			f.Color = s.Color // boost food matches snake color
+			return f
 		}
 	} else {
 		s.Speed = SnakeNormalSpeed
