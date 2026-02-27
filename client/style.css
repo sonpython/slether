@@ -197,12 +197,12 @@ html, body {
   min-width: 200px;
   max-width: 260px;
   backdrop-filter: blur(4px);
-  opacity: 0.6;
+  opacity: 0.3;
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 #leaderboard:hover {
-  opacity: 0.9;
+  opacity: 0.7;
   background: rgba(10, 10, 20, 0.65);
 }
 
