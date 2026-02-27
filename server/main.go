@@ -71,7 +71,6 @@ func main() {
 	world := NewWorld()
 	conns := NewConnManager()
 	loop := NewGameLoop(world, conns)
-	rateLimiter := newIPRateLimiter()
 
 	// WebSocket handler
 	http.HandleFunc(WebSocketPath, func(w http.ResponseWriter, r *http.Request) {
@@ -92,10 +91,7 @@ func main() {
 			sendErrorAndClose(ws, "Server full. Please try again later.")
 			return
 		}
-		if !rateLimiter.allow(ip) {
-			sendErrorAndClose(ws, "Too many connections. Please wait 30 seconds.")
-			return
-		}
+
 
 		// Enable per-message write compression at best-speed level
 		ws.EnableWriteCompression(true)
