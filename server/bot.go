@@ -301,21 +301,15 @@ func (bm *BotManager) decideBotInput(bot *Bot, snake *Snake) (float64, bool) {
 		return bot.targetAngle, false
 	}
 
-	// --- Priority 6: Proactive roam — move toward center bias (food denser there) ---
+	// --- Priority 6: Roam uniformly across the entire map ---
 	if bot.wanderTicks <= 0 {
-		// 80% chance: roam toward a random point closer to center (food-rich)
-		// 20% chance: pure random direction for exploration
-		if rand.Float64() < 0.8 {
-			// Pick random point within inner 70% of world
-			targetR := WorldRadius * 0.7 * math.Sqrt(rand.Float64())
-			targetA := rand.Float64() * 2 * math.Pi
-			tx := WorldCenterX + targetR*math.Cos(targetA)
-			ty := WorldCenterY + targetR*math.Sin(targetA)
-			bot.targetAngle = math.Atan2(ty-head.Y, tx-head.X)
-		} else {
-			bot.targetAngle = rand.Float64() * 2 * math.Pi
-		}
-		bot.wanderTicks = 20 + rand.Intn(30)
+		// Pick a random point anywhere in the world (uniform distribution)
+		targetR := (WorldRadius - BotBoundaryBuffer) * math.Sqrt(rand.Float64())
+		targetA := rand.Float64() * 2 * math.Pi
+		tx := WorldCenterX + targetR*math.Cos(targetA)
+		ty := WorldCenterY + targetR*math.Sin(targetA)
+		bot.targetAngle = math.Atan2(ty-head.Y, tx-head.X)
+		bot.wanderTicks = 40 + rand.Intn(60)
 	}
 	bot.wanderTicks--
 	return bot.targetAngle, boost
